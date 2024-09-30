@@ -1,0 +1,86 @@
+Question 1: By default are django signals executed synchronously or asynchronously? Please support your answer with a code snippet that conclusively proves your stance. The code does not need to be elegant and production ready, we just need to understand your logic.
+
+Answer :- Django signals are executed synchronously. When a signal is sent, the connected signal handlers are executed immediately, in the same thread as the code that sent the signal.
+Code example:
+class MyModel(models.Model):
+    name = models.CharField(max_length=100)
+
+@receiver(post_save, sender=MyModel)
+def my_signal_handler(instance, created, **kwargs):
+    print(f'Signal received: {instance.name}, created: {created}')
+
+def create_instance():
+    instance = MyModel(name='Test')
+    instance.save() 
+
+create_instance()
+
+Question 2: Do django signals run in the same thread as the caller? Please support your answer with a code snippet that conclusively proves your stance. The code does not need to be elegant and production ready, we just need to understand your logic.
+Answer: Yes, Django signals run in the same thread as the caller by default.
+Code example:
+class MyModel(models.Model):
+    name = models.CharField(max_length=100)
+
+@receiver(post_save, sender=MyModel)
+def my_signal_handler(instance, created, **kwargs):
+    current_thread = threading.current_thread()
+    print({current_thread.name})
+
+def create_instance():
+    print({threading.current_thread().name})
+    instance = MyModel(name='Test')
+    instance.save()
+
+if __name__ == "__main__":
+    create_instance()
+
+Question 3: By default do django signals run in the same database transaction as the caller? Please support your answer with a code snippet that conclusively proves your stance. The code does not need to be elegant and production ready, we just need to understand your logic.
+
+Answer: Yes, by default, Django signals run in the same database transaction as the caller. If a signal is triggered during a database operation, any database changes made by the signal handlers are part of the same transaction and can be rolled back if an exception occurs.
+
+Code example:
+class MyModel(models.Model):
+    name = models.CharField(max_length=100)
+
+@receiver(post_save, sender=MyModel)
+def my_signal_handler(instance, created, **kwargs):
+    if created:
+        raise ValidationError("An error occurred in the signal handler.")
+
+def create_instance():
+    try:
+        with transaction.atomic():
+            instance = MyModel(name='Test')
+            instance.save() 
+    except ValidationError as e:
+        print(Caught an error: {e})
+
+if __name__ == "__main__":
+    create_instance()
+
+
+
+
+Topic: Custom Classes in Python
+
+Description: You are tasked with creating a Rectangle class with the following requirements:
+
+
+1.	An instance of the Rectangle class requires length:int and width:int to be initialized.
+2.	We can iterate over an instance of the Rectangle class 
+3.	When an instance of the Rectangle class is iterated over, we first get its length in the format: {'length': <VALUE_OF_LENGTH>} followed by the width {width: <VALUE_OF_WIDTH>}
+
+
+Answer: class Rectangle:
+    def __init__(self, length: int, width: int):
+        self.length = length
+        self.width = width
+
+    def __iter__(self):
+        yield {'length': self.length}
+        yield {'width': self.width}
+
+rect = Rectangle(5, 10)
+
+for dimension in rect:
+    print(dimension)
